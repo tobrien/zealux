@@ -36,7 +36,7 @@
         "@tobrien/cabazooka": "^0.1.2",
         "@tobrien/eml-parse-js": "^1.2.5",
         "@tobrien/givemetheconfig": "^0.0.3",
-        "@tobrien/minorprompt": "^0.0.3",
+        "@tobrien/minorprompt": "^0.0.7",
         "@tobrien/markdown-doctest": "^1.2.2",
         "commander": "^13.1.0",
         "dayjs": "^1.11.13",
