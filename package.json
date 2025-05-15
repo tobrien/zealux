@@ -33,23 +33,7 @@
     "author": "Tim O'Brien <tobrien@discursive.com>",
     "license": "Apache-2.0",
     "dependencies": {
-        "@tobrien/cabazooka": "^0.1.2",
-        "@tobrien/eml-parse-js": "^1.2.5",
-        "@tobrien/givemetheconfig": "^0.0.3",
-        "@tobrien/minorprompt": "^0.0.3",
-        "@tobrien/markdown-doctest": "^1.2.2",
-        "commander": "^13.1.0",
-        "dayjs": "^1.11.13",
-        "deepmerge-ts": "^7.1.5",
-        "dotenv": "^16.5.0",
-        "eml-parse-js": "1.2.0-beta.0",
-        "glob": "^11.0.2",
-        "js-yaml": "^4.1.0",
-        "luxon": "^3.6.1",
-        "moment-timezone": "^0.5.48",
-        "openai": "^4.98.0",
-        "winston": "^3.17.0",
-        "zod": "^3.24.4"
+        "@tobrien/markdown-doctest": "^1.2.2"
     },
     "devDependencies": {
         "@babel/core": "^7.27.1",
@@ -72,7 +56,6 @@
         "eslint-plugin-import": "^2.31.0",
         "globals": "^16.1.0",
         "jest": "^29.7.0",
-        "mockdate": "^3.0.5",
         "rollup-plugin-preserve-shebang": "^1.0.1",
         "rollup-plugin-visualizer": "^5.14.0",
         "ts-jest": "^29.3.2",
