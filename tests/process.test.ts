@@ -1,6 +1,5 @@
 import * as PhaseNode from '../src/phasenode';
 import * as Process from '../src/process';
-import { Instance } from '../src/process';
 import { isProcess } from '../src/process';
 
 describe('isProcess', () => {
@@ -14,6 +13,7 @@ describe('isProcess', () => {
         context: validContext,
         phases: validPhases,
         startPhaseId: 'phase1',
+        end: () => { },
     };
 
     it('should return true for a valid process object', () => {

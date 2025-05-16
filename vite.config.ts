@@ -4,6 +4,7 @@ import replace from '@rollup/plugin-replace';
 // import { visualizer } from 'rollup-plugin-visualizer';
 import { execSync } from 'child_process';
 import shebang from 'rollup-plugin-preserve-shebang';
+import dts from 'vite-plugin-dts';
 
 let gitInfo = {
     branch: '',
@@ -55,6 +56,12 @@ export default defineConfig({
             '__GIT_COMMIT_DATE__': gitInfo.commitDate,
             '__SYSTEM_INFO__': `${process.platform} ${process.arch} ${process.version}`,
             preventAssignment: true,
+        }),
+        dts({
+            entryRoot: 'src',
+            outDir: 'dist',
+            exclude: ['**/*.test.ts'],
+            include: ['**/*.ts'],
         }),
     ],
     build: {

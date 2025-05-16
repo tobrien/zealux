@@ -30,14 +30,14 @@ This architecture makes **Zealux** ideal for applications like data transformati
 Here's a conceptual example of how you might define and execute a simple process using Zealux in TypeScript:
 
 ```js
-import { Process, Phase, Execution } from '@tobrien/zealux';
+import { Process, Phase, Execution, executeProcess } from '@tobrien/zealux';
 
 // --- 1. Define Concrete Phase Implementations ---
 
 // Phase 1: Adds 1 to the input number
-const addOnePhase: Phase.Instance = {
+const addOnePhase: Phase = {
     name: 'AddOne',
-    execute: async (input: Phase.Input): Promise<Phase.Output> => {
+    execute: async (input: PhaseInput): Promise<PhaseOutput> => {
         // Assuming input has a 'value' property for this example
         const inputValue = (input as any).value;
         console.log(`AddOnePhase: Received ${inputValue}`);
@@ -48,9 +48,9 @@ const addOnePhase: Phase.Instance = {
 };
 
 // Phase 2: Multiplies the input number by 2
-const multiplyByTwoPhase: Phase.Instance = {
+const multiplyByTwoPhase: Phase = {
     name: 'MultiplyByTwo',
-    execute: async (input: Phase.Input): Promise<Phase.Output> => {
+    execute: async (input: PhaseInput): Promise<PhaseOutput> => {
         const inputValue = (input as any).value;
         console.log(`MultiplyByTwoPhase: Received ${inputValue}`);
         const result = inputValue * 2;
@@ -60,9 +60,9 @@ const multiplyByTwoPhase: Phase.Instance = {
 };
 
 // Phase 3: Converts the number to a string
-const stringifyPhase: Phase.Instance = {
+const stringifyPhase: Phase = {
     name: 'Stringify',
-    execute: async (input: Phase.Input): Promise<Phase.Output> => {
+    execute: async (input: PhaseInput): Promise<PhaseOutput> => {
         const inputValue = (input as any).value;
         console.log(`StringifyPhase: Received ${inputValue}`);
         const result = `The final number is: ${inputValue}`;
@@ -76,19 +76,19 @@ const stringifyPhase: Phase.Instance = {
 // addOnePhase, multiplyByTwoPhase, and stringifyPhase are ready to be used.
 
 // --- 3. Define PhaseNodes ---
-const nodeA: Process.PhaseNode = {
+const nodeA: PhaseNode = {
     id: 'nodeA',
     phase: addOnePhase, // Use the functional phase object
     next: [{ targetPhaseNodeId: 'nodeB' }],
 };
 
-const nodeB: Process.PhaseNode = {
+const nodeB: PhaseNode = {
     id: 'nodeB',
     phase: multiplyByTwoPhase, // Use the functional phase object
     next: [{ targetPhaseNodeId: 'nodeC' }],
 };
 
-const nodeC: Process.PhaseNode = {
+const nodeC: PhaseNode = {
     id: 'nodeC',
     phase: stringifyPhase, // Use the functional phase object
     next: [], // This is an end phase
@@ -96,7 +96,7 @@ const nodeC: Process.PhaseNode = {
 };
 
 // --- 4. Define the Process ---
-const mySimpleProcess: Process.Instance = {
+const mySimpleProcess: Process = {
     name: 'MySimpleProcess',
     context: {}, // Add any relevant context
     phases: {
@@ -105,18 +105,19 @@ const mySimpleProcess: Process.Instance = {
         nodeC: nodeC,
     },
     startPhaseId: 'nodeA',
+    end: () => {}
 };
 
 // --- 5. Execute the Process ---
 async function runExample() {
-    const initialProcessInput: Phase.Input = { value: 10 }; // Generic input
+    const initialProcessInput: PhaseInput = { value: 10 }; // Generic input
     console.log(
         `Executing process "${mySimpleProcess.name}" with initial input:`,
         initialProcessInput
     );
 
     try {
-        const results: Execution.ExecutionResults = await Execution.executeProcess(
+        const results: ExecutionResults = await executeProcess(
             mySimpleProcess,
             initialProcessInput
         );

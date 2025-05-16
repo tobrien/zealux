@@ -2,6 +2,7 @@
 // import * as TranscribePhase from './phases/transcribe';
 // import * as ComposePhase from './phases/compose';
 // import * as CompletePhase from './phases/complete';
+import * as Phase from './phase';
 import * as PhaseNode from './phasenode';
 
 export interface Context {
@@ -9,11 +10,12 @@ export interface Context {
 }
 
 
-export interface Instance {
+export interface Instance<C extends Context = Context> {
     name: string;
-    context: Context;
+    context: C;
     phases: Record<string, PhaseNode.Instance>;
     startPhaseId: string;
+    end: (output: Phase.Output) => void;
 }
 
 export const isProcess = (obj: any): obj is Instance => {

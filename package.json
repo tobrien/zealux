@@ -2,19 +2,25 @@
     "name": "@tobrien/zealux",
     "version": "0.0.1",
     "description": "Zealux provides a streamlined, modular framework to manage and execute Processor Pipelines—sequences of computational steps or tasks executed systematically to process data or events. It allows developers to define, connect, and orchestrate individual processors into efficient workflows, supporting clear separation of concerns, scalability, and ease of maintenance.",
-    "main": "dist/main.js",
+    "main": "dist/zealux.js",
     "type": "module",
     "bin": {
-        "zealux": "./dist/main.js"
+        "zealux": "./dist/zealux.js"
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/tobrien/zealux.git"
     },
-    "packageManager": "pnpm@10.10.0",
+    "packageManager": "pnpm@10.11.0",
+    "exports": {
+        ".": {
+            "import": "./dist/zealux.js",
+            "types": "./dist/zealux.d.ts"
+        }
+    },
     "scripts": {
         "build": "tsc --noEmit && vite build && copyfiles -u 1 \"src/**/*.md\" dist && copyfiles -u 1 \"src/**/*.yaml\" dist",
-        "start": "node dist/main.js",
+        "start": "node dist/zealux.js",
         "dev": "vite",
         "watch": "vite build --watch",
         "test": "pnpm run test:coverage && pnpm run test:readme",
@@ -61,6 +67,7 @@
         "ts-jest": "^29.3.3",
         "typescript": "^5.8.3",
         "vite": "^6.3.5",
+        "vite-plugin-dts": "^4.5.3",
         "vite-plugin-node": "^5.0.1"
     }
 }
