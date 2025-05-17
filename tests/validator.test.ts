@@ -1,23 +1,25 @@
 import { jest } from '@jest/globals';
-import * as Phase from '../src/phase';
-import * as PhaseNode from '../src/phasenode';
-import { Context, Instance as ProcessInstance } from '../src/process';
-import { validateProcess } from 'validator';
-
+import { Phase } from '../src/phase';
+import { PhaseNode } from '../src/phasenode';
+import { Context } from '../src/context';
+import { Process } from '../src/process';
+import { validateProcess } from '../src/validator';
+import { Input } from '../src/input';
+import { Output } from '../src/output';
 
 // Define more specific Input/Output for tests if desired, though base interfaces are {}
-interface TestInput extends Phase.Input {
+interface TestInput extends Input {
     data?: any;
     [key: string]: any; // Allow other properties
 }
 
-interface TestOutput extends Phase.Output {
+interface TestOutput extends Output {
     data?: any;
     [key: string]: any; // Allow other properties
 }
 
 // Mocks
-const mockPhaseExecute: jest.MockedFunction<(input: Phase.Input) => Promise<Phase.Output>> =
+const mockPhaseExecute: jest.MockedFunction<(input: Input) => Promise<Output>> =
     jest.fn(async (input: TestInput): Promise<TestOutput> => {
         if (input && typeof input.data !== 'undefined') {
             return { data: `processed ${input.data}` };
@@ -25,7 +27,7 @@ const mockPhaseExecute: jest.MockedFunction<(input: Phase.Input) => Promise<Phas
         return { data: 'processed without specific input data' };
     });
 
-const mockPhase: Phase.Instance = {
+const mockPhase: Phase = {
     name: 'Mock Phase',
     execute: mockPhaseExecute,
 };
@@ -33,7 +35,7 @@ const mockPhase: Phase.Instance = {
 const mockContext: Context = {};
 
 describe('validateProcess', () => {
-    let baseProcess: ProcessInstance;
+    let baseProcess: Process;
 
     beforeEach(() => {
         mockPhaseExecute.mockClear(); // Clear mock calls before each test
@@ -41,20 +43,19 @@ describe('validateProcess', () => {
             name: 'Test Process',
             context: mockContext,
             startPhaseId: 'start',
-            end: () => { },
             phases: {
                 start: {
                     id: 'start',
                     phase: mockPhase,
                     next: [{ targetPhaseNodeId: 'end' }],
                     isEndPhase: false,
-                } as PhaseNode.Instance,
+                } as PhaseNode,
                 end: {
                     id: 'end',
                     phase: mockPhase,
                     next: [],
                     isEndPhase: true,
-                } as PhaseNode.Instance,
+                } as PhaseNode,
             },
         };
     });
@@ -69,14 +70,14 @@ describe('validateProcess', () => {
     });
 
     test('should return error if process.phases is missing', () => {
-        const invalidProcess = { ...baseProcess, phases: undefined as any } as ProcessInstance;
+        const invalidProcess = { ...baseProcess, phases: undefined as any } as Process;
         expect(validateProcess(invalidProcess)).toContain("Process 'phases' collection is missing or not an object.");
     });
 
     test('should return error if process.startPhaseId is missing or invalid', () => {
-        const invalidProcess1 = { ...baseProcess, startPhaseId: undefined as any } as ProcessInstance;
+        const invalidProcess1 = { ...baseProcess, startPhaseId: undefined as any } as Process;
         expect(validateProcess(invalidProcess1)).toContain("Process 'startPhaseId' is missing or invalid.");
-        const invalidProcess2 = { ...baseProcess, startPhaseId: '' } as ProcessInstance; // Ensure name and context are present
+        const invalidProcess2 = { ...baseProcess, startPhaseId: '' } as Process; // Ensure name and context are present
         expect(validateProcess(invalidProcess2)).toContain("Process 'startPhaseId' is missing or invalid.");
     });
 
@@ -86,18 +87,17 @@ describe('validateProcess', () => {
     });
 
     test('should return error if phases is empty but startPhaseId is present', () => {
-        const invalidProcess: ProcessInstance = {
+        const invalidProcess: Process = {
             name: 'Test',
             context: mockContext,
             startPhaseId: 'start',
-            end: () => { },
             phases: {},
         };
         expect(validateProcess(invalidProcess)).toContain("Process has a startPhaseId but no phases defined.");
     });
 
     test('should return error for invalid PhaseNode definition', () => {
-        const invalidProcess: ProcessInstance = {
+        const invalidProcess: Process = {
             ...baseProcess,
             phases: {
                 ...baseProcess.phases,
@@ -108,43 +108,43 @@ describe('validateProcess', () => {
     });
 
     test('should return error if PhaseNode ID does not match its key', () => {
-        const invalidProcess: ProcessInstance = {
+        const invalidProcess: Process = {
             ...baseProcess,
             phases: {
                 ...baseProcess.phases,
-                start: { ...(baseProcess.phases.start as PhaseNode.Instance), id: 'wrong-id' },
+                start: { ...(baseProcess.phases.start as PhaseNode), id: 'wrong-id' },
             },
         };
         expect(validateProcess(invalidProcess)).toContain('PhaseNode ID "wrong-id" does not match its key "start" in the phases collection.');
     });
 
     test('should return error if PhaseNode phase or execute method is missing', () => {
-        const invalidProcess1: ProcessInstance = {
+        const invalidProcess1: Process = {
             ...baseProcess,
             phases: {
                 ...baseProcess.phases,
-                start: { ...(baseProcess.phases.start as PhaseNode.Instance), phase: undefined as any },
+                start: { ...(baseProcess.phases.start as PhaseNode), phase: undefined as any },
             },
         };
         expect(validateProcess(invalidProcess1)).toContain('PhaseNode "start" is missing a valid phase instance with an execute method.');
 
-        const invalidProcess2: ProcessInstance = {
+        const invalidProcess2: Process = {
             ...baseProcess,
             phases: {
                 ...baseProcess.phases,
-                start: { ...(baseProcess.phases.start as PhaseNode.Instance), phase: { name: 'Test', execute: undefined as any } as Phase.Instance },
+                start: { ...(baseProcess.phases.start as PhaseNode), phase: { name: 'Test', execute: undefined as any } as Phase },
             },
         };
         expect(validateProcess(invalidProcess2)).toContain('PhaseNode "start" is missing a valid phase instance with an execute method.');
     });
 
     test('should return error for invalid connection (targetPhaseNodeId missing)', () => {
-        const invalidProcess: ProcessInstance = {
+        const invalidProcess: Process = {
             ...baseProcess,
             phases: {
                 ...baseProcess.phases,
                 start: {
-                    ...(baseProcess.phases.start as PhaseNode.Instance),
+                    ...(baseProcess.phases.start as PhaseNode),
                     next: [{ targetPhaseNodeId: undefined as any } as any],
                 },
             },
@@ -153,12 +153,12 @@ describe('validateProcess', () => {
     });
 
     test('should return error for connection to non-existent targetPhaseNodeId', () => {
-        const invalidProcess: ProcessInstance = {
+        const invalidProcess: Process = {
             ...baseProcess,
             phases: {
                 ...baseProcess.phases,
                 start: {
-                    ...(baseProcess.phases.start as PhaseNode.Instance),
+                    ...(baseProcess.phases.start as PhaseNode),
                     next: [{ targetPhaseNodeId: 'nonexistent-target' }],
                 },
             },
@@ -167,12 +167,12 @@ describe('validateProcess', () => {
     });
 
     test('should return error for connection with invalid transform', () => {
-        const invalidProcess: ProcessInstance = {
+        const invalidProcess: Process = {
             ...baseProcess,
             phases: {
                 ...baseProcess.phases,
                 start: {
-                    ...(baseProcess.phases.start as PhaseNode.Instance),
+                    ...(baseProcess.phases.start as PhaseNode),
                     next: [{ targetPhaseNodeId: 'end', transform: 'not-a-function' as any }],
                 },
             },

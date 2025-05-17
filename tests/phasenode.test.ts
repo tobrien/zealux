@@ -1,17 +1,17 @@
-import * as PhaseNode from '../src/phasenode';
-import * as Phase from '../src/phase';
+import { PhaseNode } from '../src/phasenode';
+import { Phase } from '../src/phase';
 import { isPhaseNode } from '../src/phasenode';
 
 describe('PhaseNode', () => {
     // Tests will go here
     describe('isPhaseNode', () => {
-        const mockPhase: Phase.Instance = {
+        const mockPhase: Phase = {
             name: 'phase1',
             execute: async (input: {}) => ({ output: input }),
         };
 
         it('should return true for a valid PhaseNode object', () => {
-            const validNode: PhaseNode.Instance = {
+            const validNode: PhaseNode = {
                 id: 'node1',
                 phase: mockPhase,
                 next: [],
@@ -20,8 +20,7 @@ describe('PhaseNode', () => {
         });
 
         it('should return false if id is missing', () => {
-            // @ts-expect-error
-            const invalidNode: PhaseNode.Instance = {
+            const invalidNode: any = {
                 phase: mockPhase,
                 next: [],
             };
@@ -29,8 +28,7 @@ describe('PhaseNode', () => {
         });
 
         it('should return false if phase is missing', () => {
-            // @ts-expect-error
-            const invalidNode: PhaseNode.Instance = {
+            const invalidNode: any = {
                 id: 'node1',
                 next: [],
             };
@@ -38,10 +36,9 @@ describe('PhaseNode', () => {
         });
 
         it('should return false if phase is not a valid Phase object', () => {
-            const invalidNode: PhaseNode.Instance = {
+            const invalidNode: PhaseNode = {
                 id: 'node1',
-                // @ts-expect-error
-                phase: { έργο: 'not a phase' }, // Intentional Greek characters to ensure it's not a phase
+                phase: { έργο: 'not a phase' } as any, // Intentional Greek characters to ensure it's not a phase
                 next: [],
             };
             expect(isPhaseNode(invalidNode)).toBe(false);

@@ -1,36 +1,4 @@
-Zealux, as a library focused on creating a system to execute a **Processor Pipeline**, can be described as follows:
-
-**Zealux** provides a streamlined, modular framework to manage and execute **Processor Pipelines**—sequences of computational steps or tasks executed systematically to process data or events. It allows developers to define, connect, and orchestrate individual processors into efficient workflows, supporting clear separation of concerns, scalability, and ease of maintenance.
-
-### Core Concepts:
-
-1. **Processor**:
-   Individual computational unit responsible for a specific, well-defined operation (e.g., parsing data, validating inputs, transforming records).
-
-2. **Pipeline**:
-   A structured sequence or graph of processors, allowing data or events to flow through multiple processing stages seamlessly.
-
-3. **Execution Engine**:
-   Manages the lifecycle of processors within a pipeline, coordinating initialization, execution order, concurrency, error handling, and resource management.
-
-4. **Pipeline Definition**:
-   Clear, configurable declarations for how processors interact, ensuring pipelines are easy to define, understand, modify, and debug.
-
-### Why Zealux?
-
-* **Modularity**: Easy plug-and-play processors to extend or modify pipeline behavior.
-* **Robustness**: Handles complex execution scenarios with built-in error handling and resource management.
-* **Scalability**: Designed for high performance, enabling parallel execution and efficient handling of large-scale processing.
-* **Developer-friendly**: Clean, intuitive APIs for building and managing pipelines.
-
-This architecture makes **Zealux** ideal for applications like data transformation, event handling, ETL (Extract, Transform, Load) processes, middleware orchestration, and automation workflows—anywhere a structured pipeline execution model is advantageous.
-
-### Example Usage
-
-Here's a conceptual example of how you might define and execute a simple process using Zealux in TypeScript:
-
-```js
-import { Input, Output, PhaseNode, Process, Phase, executeProcess } from '@tobrien/zealux';
+import { Input, Output, PhaseNode, Process, Phase, executeProcess } from '../src/zealux';
 
 // --- 1. Define Concrete Phase Implementations ---
 
@@ -137,35 +105,11 @@ async function runExample() {
 // Run the example
 runExample();
 
-/*
-Expected console output:
 
-Executing process "MySimpleProcess" with initial input: { value: 10 }
-AddOnePhase: Received 10
-AddOnePhase: Outputting 11
-MultiplyByTwoPhase: Received 11
-MultiplyByTwoPhase: Outputting 22
-StringifyPhase: Received 22
-StringifyPhase: Outputting "The final number is: 22"
+describe('example1', () => {
 
-Process Execution Results:
-Output from nodeC: { value: 'The final number is: 22' }
-
-Final output from StringifyPhase (nodeC): The final number is: 22
-*/
-```
-
-Copyright 2025 Tim O'Brien
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+    test('runExample', async () => {
+        // Run the example
+        runExample();
+    });
+});

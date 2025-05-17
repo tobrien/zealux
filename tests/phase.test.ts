@@ -1,11 +1,14 @@
-import { isPhase, Instance, Input, Output } from '../src/phase';
+import { Input } from '../src/input';
+import { Output } from '../src/output';
+import { isPhase, Phase } from '../src/phase';
+
 
 describe('Phase', () => {
     describe('isPhase', () => {
         const mockExecute = async (input: Input): Promise<Output> => { return {}; };
 
         it('should return true for a valid phase instance', () => {
-            const validInstance: Instance = {
+            const validInstance: Phase = {
                 name: 'testPhase',
                 execute: mockExecute,
             };

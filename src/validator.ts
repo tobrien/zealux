@@ -1,7 +1,7 @@
-import * as PhaseNode from './phasenode';
-import * as Process from './process';
+import { Connection } from './phasenode';
+import { Process } from './process';
 
-export function validateProcess(process: Process.Instance): string[] {
+export function validateProcess(process: Process): string[] {
     const errors: string[] = [];
     if (!process || typeof process !== 'object') {
         errors.push("Process definition is missing or not an object.");
@@ -35,10 +35,12 @@ export function validateProcess(process: Process.Instance): string[] {
         if (!node.phase || typeof node.phase.execute !== 'function') {
             errors.push(`PhaseNode "${id}" is missing a valid phase instance with an execute method.`);
         }
-        if (!Array.isArray(node.next)) {
-            errors.push(`PhaseNode "${id}" has an invalid 'next' property (should be an array).`);
-        } else {
-            for (const connection of node.next) {
+
+        // Check if 'next' is an array (for Connections) or an object (for Termination)
+        if (node.next === undefined || node.next === null) {
+            errors.push(`PhaseNode "${id}" has a missing 'next' property.`);
+        } else if (Array.isArray(node.next)) { // It's an array of Connections
+            for (const connection of node.next as Connection<any, any, any>[]) { // Cast to Connection array
                 if (!connection || typeof connection.targetPhaseNodeId !== 'string' || !connection.targetPhaseNodeId) {
                     errors.push(`PhaseNode "${id}" has an invalid connection (targetPhaseNodeId missing or invalid).`);
                 } else if (process.phases && !process.phases[connection.targetPhaseNodeId]) {
@@ -48,6 +50,15 @@ export function validateProcess(process: Process.Instance): string[] {
                     errors.push(`PhaseNode "${id}" has a connection to "${connection.targetPhaseNodeId}" with an invalid transform (should be a function).`);
                 }
             }
+        } else if (typeof node.next === 'object') { // It could be a Termination object
+            const termination = node.next as any; // Use 'any' for now, or import Termination and isTermination
+            if (typeof termination.id !== 'string' || typeof termination.terminate !== 'function') {
+                errors.push(`PhaseNode "${id}" has an invalid Termination object for 'next'. It must have 'id' (string) and 'terminate' (function) properties.`);
+            }
+            // Add any other specific validation for Termination objects if needed
+        } else {
+            // This case should ideally not be reached if types are correct, but as a fallback:
+            errors.push(`PhaseNode "${id}" has an invalid 'next' property type. Expected an array of Connections or a Termination object.`);
         }
     }
 
@@ -61,11 +72,13 @@ export function validateProcess(process: Process.Instance): string[] {
             visited.add(currentId);
             const currentNode = process.phases[currentId];
             if (currentNode && currentNode.next) {
-                currentNode.next.forEach((conn: PhaseNode.Connection) => {
-                    if (process.phases[conn.targetPhaseNodeId] && !visited.has(conn.targetPhaseNodeId)) {
-                        stack.push(conn.targetPhaseNodeId);
-                    }
-                });
+                if (Array.isArray(currentNode.next)) {
+                    currentNode.next.forEach((conn: Connection) => {
+                        if (process.phases[conn.targetPhaseNodeId] && !visited.has(conn.targetPhaseNodeId)) {
+                            stack.push(conn.targetPhaseNodeId);
+                        }
+                    });
+                }
             }
         }
     }

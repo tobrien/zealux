@@ -2,23 +2,17 @@
 // import * as TranscribePhase from './phases/transcribe';
 // import * as ComposePhase from './phases/compose';
 // import * as CompletePhase from './phases/complete';
-import * as Phase from './phase';
-import * as PhaseNode from './phasenode';
+import { Context } from './context';
+import { PhaseNode } from './phasenode';
 
-export interface Context {
-    [key: string]: unknown;
-}
-
-
-export interface Instance<C extends Context = Context> {
+export interface Process<C extends Context = Context> {
     name: string;
     context: C;
-    phases: Record<string, PhaseNode.Instance>;
+    phases: Record<string, PhaseNode>;
     startPhaseId: string;
-    end: (output: Phase.Output) => void;
 }
 
-export const isProcess = (obj: any): obj is Instance => {
+export const isProcess = (obj: any): obj is Process => {
     return obj !== undefined && obj !== null && typeof obj === 'object' && typeof obj.name === 'string' && typeof obj.context === 'object' && typeof obj.phases === 'object' && typeof obj.startPhaseId === 'string';
 }
 

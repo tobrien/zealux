@@ -1,10 +1,13 @@
-import * as Process from './process';
-import * as Phase from './phase';
+import { Process } from './process';
 import { validateProcess } from './validator';
+import { isConnection, isTermination, Termination } from './phasenode';
+import { Output } from './output';
+import { Input } from './input';
+import { Context } from 'context';
 
-export interface ExecutionResults {
-    [nodeId: string]: Phase.Output;
-}
+export type PhaseResults = Map<string, Output>;
+
+export type ProcessResults = Map<string, Output>;
 
 interface ExecutionError {
     nodeId: string;
@@ -13,9 +16,10 @@ interface ExecutionError {
 
 // Helper type for internal state management
 interface ExecutionState {
-    process: Process.Instance;
-    phaseResults: Map<string, Phase.Output>;
-    activeExecutions: Map<string, Promise<Phase.Output>>;
+    process: Process;
+    phaseResults: PhaseResults;
+    results: ProcessResults;
+    activeExecutions: Map<string, Promise<Output>>;
     errors: ExecutionError[];
 }
 
@@ -23,9 +27,9 @@ interface ExecutionState {
 
 async function executeNodeRecursive(
     nodeId: string,
-    input: Phase.Input,
+    input: Input,
     state: ExecutionState
-): Promise<Phase.Output> {
+): Promise<Output> {
     // 1. Check if result is already cached
     if (state.phaseResults.has(nodeId)) {
         return state.phaseResults.get(nodeId)!;
@@ -50,10 +54,10 @@ async function executeNodeRecursive(
             state.phaseResults.set(nodeId, output); // Cache the result
 
             // 4. Trigger next phases (fan-out)
-            if (node.next && node.next.length > 0) {
-                const nextPhasePromises: Promise<Phase.Output>[] = [];
+            if (node.next && Array.isArray(node.next) && node.next.length > 0 && node.next.every(isConnection)) {
+                const nextPhasePromises: Promise<Output>[] = [];
                 for (const connection of node.next) {
-                    let nextInput = output as Phase.Input;
+                    let nextInput = output as Input;
                     let nextContext = state.process.context;
                     if (connection.transform) {
                         try {
@@ -70,9 +74,17 @@ async function executeNodeRecursive(
                     nextPhasePromises.push(executeNodeRecursive(connection.targetPhaseNodeId, nextInput, state));
                 }
                 // Optional: await Promise.all(nextPhasePromises);
+            } else if (node.next && isTermination(node.next)) {
+                const termination = node.next as Termination<Output, Output, Context>;
+                const result: Output = output;
+                if (termination.terminate) {
+                    termination.terminate(output, state.process.context);
+                }
+                state.results.set(termination.id, result); // Also call the general process end
             } else {
-                // If there are no next phases, we need to end the process
-                state.process.end(output);
+                // If there is no next, consider this is an end state and store the result with the nodeId
+                const result: Output = output;
+                state.results.set(nodeId, result);
             }
             return output;
         } catch (error) {
@@ -89,45 +101,10 @@ async function executeNodeRecursive(
     return executionPromise;
 }
 
-function gatherResults(state: ExecutionState): ExecutionResults {
-    const results: ExecutionResults = {};
-    let hasExplicitEndPhases = false;
-    for (const nodeId in state.process.phases) {
-        if (state.process.phases[nodeId].isEndPhase) {
-            hasExplicitEndPhases = true;
-            if (state.phaseResults.has(nodeId)) {
-                results[nodeId] = state.phaseResults.get(nodeId)!;
-            } else if (!state.errors.find(e => e.nodeId === nodeId)) {
-                // eslint-disable-next-line no-console
-                console.warn(`End phase "${nodeId}" did not execute or produce a result.`);
-            }
-        }
-    }
-
-    if (!hasExplicitEndPhases) {
-        for (const nodeId in state.process.phases) {
-            const node = state.process.phases[nodeId];
-            const hasExecuted = state.phaseResults.has(nodeId);
-            const isLeafNode = (!node.next || node.next.length === 0);
-
-            if (hasExecuted && isLeafNode) {
-                results[nodeId] = state.phaseResults.get(nodeId)!;
-            }
-        }
-    }
-
-    if (state.errors.length > 0) {
-        // eslint-disable-next-line no-console
-        console.warn("Process execution completed with errors:", state.errors);
-    }
-
-    return results;
-}
-
 export async function executeProcess(
-    processInstance: Process.Instance,
-    initialInput: Phase.Input
-): Promise<ExecutionResults> {
+    processInstance: Process,
+    initialInput: Input
+): Promise<[ProcessResults, PhaseResults, Context]> {
     const validationErrors = validateProcess(processInstance);
     if (validationErrors.length > 0) {
         throw new Error(`Invalid process definition:\n${validationErrors.join('\n')}`);
@@ -135,8 +112,9 @@ export async function executeProcess(
 
     const state: ExecutionState = {
         process: processInstance,
-        phaseResults: new Map<string, Phase.Output>(),
-        activeExecutions: new Map<string, Promise<Phase.Output>>(),
+        results: new Map<string, Output>(),
+        phaseResults: new Map<string, Output>(),
+        activeExecutions: new Map<string, Promise<Output>>(),
         errors: [],
     };
 
@@ -152,6 +130,6 @@ export async function executeProcess(
         // Depending on desired behavior, you might want to re-throw or handle differently
     }
 
-    return gatherResults(state);
+    return [state.results, state.phaseResults, state.process.context];
 }
 

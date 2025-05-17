@@ -1,19 +1,19 @@
-import * as PhaseNode from '../src/phasenode';
-import * as Process from '../src/process';
+import { Context } from '../src/context';
+import { PhaseNode } from '../src/phasenode';
+import { Process } from '../src/process';
 import { isProcess } from '../src/process';
 
 describe('isProcess', () => {
-    const validContext: Process.Context = {};
-    const validPhases: Record<string, PhaseNode.Instance> = {
+    const validContext: Context = {};
+    const validPhases: Record<string, PhaseNode> = {
         phase1: { id: 'phase1', phase: { name: 'TestPhase', execute: async (input: {}) => ({ output: input }) }, next: [], },
     };
 
-    const validProcess: Process.Instance = {
+    const validProcess: Process = {
         name: 'Test Process',
         context: validContext,
         phases: validPhases,
         startPhaseId: 'phase1',
-        end: () => { },
     };
 
     it('should return true for a valid process object', () => {
