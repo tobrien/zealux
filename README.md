@@ -153,7 +153,7 @@ StringifyPhase: Outputting "The final number is: 22"
 The following example shows how to configure a process that has multiple end results.  In this example, the initial phase node defnition routes output to 2 nodes.
 
 ```js
-import { Input, Output, PhaseNode, Process, Phase, executeProcess } from '../src/zealux';
+import { Input, Output, PhaseNode, Process, Phase, executeProcess } from '@tobrien/zealux';
 
 // --- 1. Define Concrete Phase Implementations ---
 
